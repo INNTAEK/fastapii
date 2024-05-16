@@ -1,16 +1,15 @@
-from fastapi import FastAPI
-import mysql.connector
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import mysql.connector
 
 app = FastAPI()
 
-# MySQL 서버에 연결
+# AWS RDS MySQL 서버에 연결
 conn = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="0000",
-    database="test"
+    host="your-rds-endpoint.amazonaws.com",  # RDS 엔드포인트
+    user="your-username",  # 사용자 이름
+    password="your-password",  # 비밀번호
+    database="test"  # 데이터베이스 이름
 )
 cursor = conn.cursor()
 
@@ -24,8 +23,8 @@ class TestData(BaseModel):
     plus_count: int
 
 # 테스트 생성
-@app.post("/add_data/")
-async def add_data(data: TestData):
+@app.post("/testcase/")
+async def create_test(data: TestData):
     try:
         print(data)
         # 데이터베이스에 데이터 추가
@@ -42,7 +41,7 @@ async def add_data(data: TestData):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 # 테스트 삭제
-@app.delete("/delete_test/{test_id}/")
+@app.delete("/testcase/{test_id}/")
 def delete_test(test_id: int):
     try:
         cursor.execute("DELETE FROM test WHERE test_id = %s", (test_id,))
@@ -50,7 +49,6 @@ def delete_test(test_id: int):
         return {"message": "Test deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
 
 # 테스트 케이스 목록 가져오기
 @app.get("/testcase/")
@@ -78,7 +76,7 @@ def execute_test(testcase_id: int):
                 "test_name": test_name,
                 "user_num": user_num,
                 "user_plus_num": user_plus_num,
-                "intervar_time": interver_time,
+                "interver_time": interver_time,
                 "plus_count": plus_count
             }
         else:
@@ -88,9 +86,8 @@ def execute_test(testcase_id: int):
         # 예외 발생 시 500 에러 반환
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-
 # 테스트 결과값 반환
-@app.get("/testcase/{testcase_id}/stats")
+@app.get("/testcase/{testcase_id}/stats/")
 def stats():
     # 테스트 결과 가져오는 SQL
     return
